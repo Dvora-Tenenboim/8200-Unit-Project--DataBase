@@ -1,0 +1,1 @@
+{"fields": ["DBField(name='ID', type=<class 'int'>)", "DBField(name='First', type=<class 'str'>)", "DBField(name='Last', type=<class 'str'>)", "DBField(name='Birthday', type=<class 'str'>)"], "key_field_name": "ID", "table_dir_path": "db_files\\Students", "counter": 28, "dict_field_names_field_ids": "bidict({'First': 1, 'Last': 2, 'Birthday': 3})"}
