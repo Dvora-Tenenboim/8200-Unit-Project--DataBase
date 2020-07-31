@@ -10,8 +10,15 @@ import db_api
 from dataclasses_json import dataclass_json
 from collections import defaultdict
 from os import path
+import operator
 
 DB_ROOT = Path('db_files')
+
+OPERATOR_DICT = {'>': operator.lt,
+                 '>=': operator.le,
+                 '<': operator.gt,
+                 '<=': operator.ge,
+                 '=': operator.eq, }
 
 
 @dataclass_json
@@ -25,28 +32,26 @@ class DBField(db_api.DBField):
         self.type = type
 
 
-def criteria_is_met(key_value, operator, value):
-    if operator == "=":
-        operator="=="
-    regular_str = str(key_value) + operator + str(value)
-    return eval(regular_str)
+def criteria_is_met(key_value, _operator, value):
+    if type(value) == int:
+        if _operator == "=":
+            _operator="=="
+        regular_str = str(key_value) + _operator + str(value)
+        return eval(regular_str)
+    return OPERATOR_DICT[_operator](key_value, value)
 
 
 @dataclass_json
 @dataclass
 class SelectionCriteria(db_api.SelectionCriteria):
     field_name: str
-    operator: str
+    _operator: str
     value: Any
 
-    def __init__(self, field_name: str, operator: str, value: Any):
+    def __init__(self, field_name: str, _operator: str, value: Any):
         self.field_name = field_name
-        self.operator = operator
+        self._operator = _operator
         self.value = value
-
-    def is_met(self, field_value):
-        regular_str = str(field_value) + self.operator + str(self.value)
-        return eval(regular_str)
 
 
 def get_dict_from_file(field_file_path):
@@ -91,7 +96,7 @@ def insert_key_field_ids(table_dir_path: str, key_field_name: str, curr_key: int
     if not is_exist_key(map_keys_fields_ids, curr_key):
         map_keys_fields_ids[curr_key] = get_list_files_ids(dict_field_ids_field_names, values)
     else:
-        raise ValueError("key is exist already")  # TODO more specific
+        raise ValueError("key is exist already")
     with open(keys_file_path, 'w') as keys_file:
         json.dump(map_keys_fields_ids, keys_file, default=str)
 
@@ -144,15 +149,12 @@ def get_map_key_num_of_true_criteria(table_dir_path, key_field_name, criteria: L
         if field_name == key_field_name:
             for key_value in map_key_value_field_value.keys():
                 for selection_criteria in criteria_list:
-                    print(criteria_list)
-                    print(selection_criteria)
-                    # if selection_criteria.is_met(key_value):
-                    if criteria_is_met(key_value, selection_criteria.operator, selection_criteria.value):
+                    if criteria_is_met(key_value, selection_criteria._operator, selection_criteria.value):
                         map_key_num_of_true_criteria[key_value] += 1
         else:
             for key_value, field_value in map_key_value_field_value.items():
                 for selection_criteria in criteria_list:
-                    if criteria_is_met(field_value, selection_criteria.operator, selection_criteria.value):
+                    if criteria_is_met(field_value, selection_criteria._operator, selection_criteria.value):
                         map_key_num_of_true_criteria[key_value] += 1
     return map_key_num_of_true_criteria
 
@@ -187,7 +189,7 @@ class DBTable(db_api.DBTable):
 
     def insert_record(self, values: Dict[str, Any]) -> None:
         if not key_field_is_exist(values, self.key_field_name):
-            raise ValueError("key is exist already")  # TODO more specific
+            raise ValueError("key is exist already")
         curr_key = values[self.key_field_name]
         del values[self.key_field_name]
         update_dict_field_names_field_ids(self.dict_field_names_field_ids, values)
@@ -266,13 +268,11 @@ class DBTable(db_api.DBTable):
 
 
 def init_table_dir(table_name: str):
-    # parent_dir = pathlib.Path().absolute()
-    # table_dir_path = os.path.join(parent_dir, f"{DB_ROOT}", name)
     table_dir_path = get_table_dir_path(table_name)
     try:
         os.mkdir(table_dir_path)
     except OSError as error:
-        print(f"{error} you have already created a table named {table_name}")
+        raise OSError(f"{error} you have already created a table named {table_name}")
     init_table_data_file(table_dir_path)
 
 
@@ -294,8 +294,6 @@ def get_table_data(table_path):
 @dataclass_json
 @dataclass
 class DataBase(db_api.DataBase):
-    # Put here any instance information needed to support the API
-
     path: str
     map_table_name_table_path: dict
     map_table_name_table_DBTable_object: dict
@@ -329,9 +327,15 @@ class DataBase(db_api.DataBase):
                      table_name: str,
                      fields: List[DBField],
                      key_field_name: str) -> DBTable:
+        flag_good_key = 0
+        for field in fields:
+            if field.name == key_field_name:
+                flag_good_key = 1
+                break
+        if not flag_good_key:
+            raise ValueError("bad key")
         init_table_dir(table_name)
         table_dir_path = get_table_dir_path(table_name)
-
         new_table = DBTable(table_name, fields, key_field_name, table_dir_path)
         self.map_table_name_table_DBTable_object[table_name] = new_table
         map_table_name_table_path = get_dict_from_file(self.path)
@@ -372,26 +376,3 @@ class DataBase(db_api.DataBase):
         #     curr_table = dbtable.query_table(fields_and_values_list[table_num])
         pass
 
-
-# _id = DBField("id", int)
-# age = DBField("age", int)
-# _list = [_id, age]
-# db = DataBase()
-# t1 = db.create_table("teacher", _list, "id")
-# t1.insert_record({"id": 5, "age": 7, "height": 30})
-# t1.insert_record({"id": 6, "age": 10, "height": 25})
-# t1.insert_record({"id": 8, "age": 20, "height": 30})
-# t1.delete_record(6)
-# print(t1.get_record(5))
-# a = SelectionCriteria("id", ">", 7)
-# b = SelectionCriteria("height", "<", 50)
-# c = SelectionCriteria("height", ">", 20)
-# criteria = [a, b, c]
-# print(t1.query_table(criteria))
-# t1.delete_records(criteria)
-
-# data = mpu.io.read('example.json')
-# pip install mpu
-# mpu.io.write('example.json', data)
-s = SelectionCriteria("F", "==", 1000020)
-s.is_met(80)

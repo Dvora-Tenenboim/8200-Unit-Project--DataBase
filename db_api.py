@@ -5,7 +5,6 @@ from typing import Any, Dict, List, Type
 from dataclasses_json import dataclass_json
 
 DB_ROOT = Path('db_files')
-# DB_ROOT = "db_files"
 
 
 @dataclass_json
@@ -19,7 +18,7 @@ class DBField:
 @dataclass
 class SelectionCriteria:
     field_name: str
-    operator: str
+    _operator: str
     value: Any
 
 

@@ -10,10 +10,8 @@ from db import DataBase
 from db_api import DBField, SelectionCriteria, DB_ROOT, DBTable
 
 DB_BACKUP_ROOT = DB_ROOT.parent / (DB_ROOT.name + '_backup')
-# STUDENT_FIELDS = [DBField('ID', int), DBField('First', str),
-#                   DBField('Last', str), DBField('Birthday', dt.datetime)]
 STUDENT_FIELDS = [DBField('ID', int), DBField('First', str),
-                  DBField('Last', str), DBField('Birthday', str)]
+                  DBField('Last', str), DBField('Birthday', dt.datetime)]
 
 
 def delete_files(folder: Path):
@@ -76,18 +74,6 @@ def test_reload_from_backup(backup_db: Path) -> None:
     assert students.count() == 100
 
 
-# def test_reload_from_backup(backup_db: Path) -> None:
-#     """This test requires preparing the backup by calling create_db_backup()"""
-#     delete_files(DB_ROOT)
-#     for path in backup_db.iterdir():
-#         (DB_ROOT / path.name).write_bytes(path.read_bytes())
-#     db = DataBase()
-#     assert db.num_tables() == 1
-#     assert db.get_tables_names() == ['Students']
-#     students = db.get_table('Students')
-#     assert students.count() == 100
-
-
 def test_create(new_db: DataBase) -> None:
     db = new_db
     assert db.num_tables() == 0
@@ -134,8 +120,8 @@ def test_50_students(new_db: DataBase) -> None:
     assert students.count() == 28
     students.update_record(1_000_009, dict(First='Jane', Last='Doe'))
     results = students.query_table([SelectionCriteria('First', '=', 'Jane')])
-    # assert len(results) == 1
-    # assert results[0]['First'] == 'Jane'
+    assert len(results) == 1
+    assert results[0]['First'] == 'Jane'
 
 
 def test_performance(new_db: DataBase) -> None:
