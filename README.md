@@ -9,8 +9,6 @@ This very own DB syntax VS. MySQL syntax
 ![image](https://user-images.githubusercontent.com/67588396/141168494-8a6a1c6e-6df3-4b3f-a647-3a187a870596.png)
 
 
-alt text
-
 ## Team Members
 Dvora Tenenbaum
 Miryam Diner
