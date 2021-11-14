@@ -10,13 +10,13 @@ This very own DB syntax VS. MySQL syntax
 
 
 ## Team Members
-Dvora Tenenbaum
-Miryam Diner
+* Dvora Tenenbaum
+* Miryam Diner
 
 ## Libraries/Technologies Used
-Python 3.8
-Pytest
+* Python 3.8
+* Pytest
 
 ## Special Thanks
-Ministry of Defence (8200 unit) mentors
-Our team
+* Ministry of Defence (8200 unit) mentors
+* Our team
